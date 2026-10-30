@@ -1,0 +1,10 @@
+{
+  "name": "iuh-nmattt",
+  "version": "1.0.0",
+  "description": "Thể hiện tính ứng dụng 2 thuật toán RSA & AES-CBC",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "scripts": {
+  }
+}

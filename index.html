@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RSA &amp; AES Demo</title>
+    <style>
+      * { box-sizing: border-box; }
+
+      body {
+        max-width: 1000px;
+        margin: 24px auto;
+        padding: 0 16px;
+        font-family: Arial, sans-serif;
+        line-height: 1.5;
+        color: #222;
+      }
+
+      section {
+        margin: 24px 0;
+        padding: 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      h1, h2 { margin-top: 0; }
+
+      label {
+        display: block;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+
+      input, textarea, button {
+        width: 100%;
+        margin-top: 5px;
+        padding: 9px;
+        font: inherit;
+      }
+
+      textarea { min-height: 80px; resize: vertical; }
+
+      button { cursor: pointer; }
+      button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .actions button { flex: 1; }
+
+      .output {
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+        background: #f5f5f5;
+        padding: 10px;
+        min-height: 40px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .error { color: #b00020; font-weight: 600; }
+
+      @media (max-width: 650px) {
+        .grid { grid-template-columns: 1fr; }
+        .actions { flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mô phỏng mã hóa RSA và AES</h1>
+
+    <section>
+      <h2>1. RSA — Mã hóa và giải mã</h2>
+      <p>RSA demo sử dụng số nguyên nhỏ để minh họa cơ chế. Không dùng để bảo vệ dữ liệu thật.</p>
+
+      <label for="rsa-p">Số nguyên tố p</label>
+      <input id="rsa-p" type="number" value="61" />
+
+      <label for="rsa-q">Số nguyên tố q</label>
+      <input id="rsa-q" type="number" value="53" />
+
+      <label for="rsa-e">Số mũ công khai e</label>
+      <input id="rsa-e" type="number" value="17" />
+
+      <label for="rsa-message">Plaintext</label>
+      <textarea id="rsa-message">HELLO RSA</textarea>
+
+      <div class="actions">
+        <button id="rsa-encrypt" type="button">Mã hóa RSA</button>
+        <button id="rsa-decrypt" type="button">Giải mã RSA</button>
+      </div>
+
+      <label>Public key (n, e)</label>
+      <div id="rsa-public" class="output"></div>
+
+      <label>Private key (n, d)</label>
+      <div id="rsa-private" class="output"></div>
+
+      <label for="rsa-ciphertext">Ciphertext</label>
+      <textarea id="rsa-ciphertext"></textarea>
+
+      <label>Plaintext sau giải mã</label>
+      <div id="rsa-result" class="output"></div>
+
+      <p id="rsa-status" role="status"></p>
+    </section>
+
+    <section>
+      <h2>2. AES-CBC — Mã hóa và giải mã</h2>
+      <p>AES sử dụng key 256-bit và IV 128-bit. Cùng key và IV sẽ cho cùng ciphertext với cùng plaintext.</p>
+
+      <label for="aes-key">Key (Base64, 32 bytes)</label>
+      <input id="aes-key" placeholder="Để trống để tạo key mới" />
+
+      <label for="aes-iv">IV (Base64, 16 bytes)</label>
+      <input id="aes-iv" placeholder="Để trống để tạo IV mới" />
+
+      <label for="aes-message">Plaintext</label>
+      <textarea id="aes-message">Hello AES encryption</textarea>
+
+      <div class="actions">
+        <button id="aes-encrypt" type="button">Mã hóa AES</button>
+        <button id="aes-decrypt" type="button">Giải mã AES</button>
+      </div>
+
+      <label for="aes-ciphertext">Ciphertext (Base64)</label>
+      <textarea id="aes-ciphertext"></textarea>
+
+      <label>Plaintext sau giải mã</label>
+      <div id="aes-result" class="output"></div>
+
+      <p id="aes-status" role="status"></p>
+    </section>
+
+    <section>
+      <h2>3. Hybrid encryption — RSA + AES</h2>
+      <p>Bên gửi tạo AES key ngẫu nhiên, mã hóa nội dung bằng AES, sau đó dùng RSA public key để mã hóa AES key. Bên nhận dùng RSA private key khôi phục AES key rồi giải mã nội dung.</p>
+
+      <div class="grid">
+        <div>
+          <label for="hybrid-p">RSA p</label>
+          <input id="hybrid-p" type="number" value="61" />
+
+          <label for="hybrid-q">RSA q</label>
+          <input id="hybrid-q" type="number" value="53" />
+
+          <label for="hybrid-e">RSA e</label>
+          <input id="hybrid-e" type="number" value="17" />
+        </div>
+
+        <div>
+          <label for="hybrid-message">Plaintext</label>
+          <textarea id="hybrid-message">This is a hybrid encryption demo.</textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="hybrid-encrypt" type="button">1. RSA + AES mã hóa</button>
+        <button id="hybrid-decrypt" type="button">2. Giải mã hai bước</button>
+      </div>
+
+      <label>RSA public key (n, e)</label>
+      <div id="hybrid-public" class="output"></div>
+
+      <label>RSA private key (n, d)</label>
+      <div id="hybrid-private" class="output"></div>
+
+      <label>AES key ngẫu nhiên (Base64, 32 bytes)</label>
+      <div id="hybrid-aes-key" class="output"></div>
+
+      <label>IV (Base64, 16 bytes)</label>
+      <div id="hybrid-aes-iv" class="output"></div>
+
+      <label>AES key đã bọc bằng RSA (từng byte)</label>
+      <div id="hybrid-encrypted-key" class="output"></div>
+
+      <label for="hybrid-ciphertext">Ciphertext (Base64)</label>
+      <textarea id="hybrid-ciphertext"></textarea>
+
+      <label>Plaintext sau giải mã</label>
+      <div id="hybrid-result" class="output"></div>
+
+      <p id="hybrid-status" role="status"></p>
+    </section>
+
+    <script src="index.js" defer></script>
+  </body>
+</html>
