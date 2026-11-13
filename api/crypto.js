@@ -1,4 +1,4 @@
-import { aesDecrypt, aesEncrypt, rsaDecrypt, rsaEncrypt } from '../service/crypto.js';
+import { aesDecrypt, aesEncrypt, rsaDecrypt, rsaEncrypt } from '../private/service/crypto.js';
 
 const operations = {
   'rsa-encrypt': rsaEncrypt,
