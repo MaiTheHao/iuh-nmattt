@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AES-CBC</title>
+    <link rel="icon" type="image/png" href="../logo.png" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-brand">
+        <a href="index.html">
+          <img src="../logo.png" alt="Logo" class="logo" />
+        </a>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Trang chủ</a>
+        <a href="rsa.html">1. RSA</a>
+        <a href="aes.html" class="active">2. AES-CBC</a>
+      </nav>
+    </header>
+
+    <main>
+      <section>
+        <h2>2. AES-CBC (Mã hóa đối xứng)</h2>
+        <p class="desc">
+          Mã hóa khối đối xứng dùng chung một khóa bí mật, kết hợp chế độ Cipher Block Chaining (CBC) và Vector khởi tạo (IV).
+        </p>
+
+        <label for="aes-direction">Chiều xử lý</label>
+        <select id="aes-direction">
+          <option value="encrypt">Mã hóa</option>
+          <option value="decrypt">Giải mã</option>
+        </select>
+
+        <label for="aes-key">SECRET KEY</label>
+        <input id="aes-key" value="bi-mat-cua-toi" />
+
+        <label id="aes-input-label" for="aes-input">PLAINTEXT</label>
+        <textarea id="aes-input">Hello AES-CBC</textarea>
+
+        <button id="aes-run" type="button" class="btn btn-primary">Mã hóa AES-CBC</button>
+
+        <label for="aes-result">Kết quả</label>
+        <input id="aes-result" class="output" readonly />
+        <p id="aes-status" role="status"></p>
+      </section>
+    </main>
+
+    <script src="../index.js" defer></script>
+  </body>
+</html>

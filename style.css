@@ -1,0 +1,209 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+  color: #333;
+  background-color: #fdfdfd;
+}
+
+/* Header & Menu */
+header {
+  margin-bottom: 20px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.header-brand h1 {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+}
+
+.header-brand p {
+  margin: 0;
+  color: #666;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+}
+
+.desc {
+  margin: 0 0 14px;
+  color: #666;
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.nav a {
+  padding: 8px 14px;
+  text-decoration: none;
+  color: #333;
+  background: #eee;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.nav a:hover {
+  background: #e2e2e2;
+}
+
+.nav a.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* Sections & Cards */
+section, .card {
+  margin: 16px 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* Forms & Inputs */
+label {
+  display: block;
+  margin-top: 12px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+input, textarea, select {
+  width: 100%;
+  margin-top: 5px;
+  padding: 8px 10px;
+  font: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+textarea {
+  min-height: 85px;
+  resize: vertical;
+  font-family: monospace;
+}
+
+.output {
+  min-height: 40px;
+  margin-top: 5px;
+  padding: 10px;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-family: monospace;
+}
+
+p[role="status"] {
+  min-height: 20px;
+  margin: 8px 0 0;
+  color: #0284c7;
+  font-weight: 500;
+}
+
+/* Buttons & Màu cơ bản */
+button, .btn {
+  display: inline-block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 16px;
+  font: inherit;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+/* Màu xanh dương (Mặc định / Primary) */
+button, .btn, .btn-primary {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+button:hover, .btn:hover, .btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+/* Màu xám (Secondary) */
+.btn-secondary {
+  background-color: #64748b;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background-color: #475569;
+}
+
+/* Màu xanh lá (Success) */
+.btn-success {
+  background-color: #16a34a;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background-color: #15803d;
+}
+
+/* Màu đỏ (Danger) */
+.btn-danger {
+  background-color: #dc2626;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
+}
+
+button:disabled, .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .header-brand {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

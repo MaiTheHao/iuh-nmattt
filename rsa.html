@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>1. RSA — Mô phỏng mật mã</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Nhập Môn An Toàn Thông Tin</h1>
+      <p>Ứng dụng thuật toán RSA và AES-CBC</p>
+      <nav class="nav">
+        <a href="index.html">Trang chủ</a>
+        <a href="rsa.html" class="active">1. RSA</a>
+        <a href="aes.html">2. AES-CBC</a>
+      </nav>
+    </header>
+
+    <main>
+      <section>
+        <h2>1. RSA — 2048 bit (Bất đối xứng)</h2>
+        <p class="desc">
+          Mã hóa và giải mã sử dụng cặp khóa công khai (Public Key) và bí mật (Secret Key) với chuẩn RSA-OAEP 2048-bit.
+        </p>
+
+        <label for="rsa-key-mode">Cách nhập khóa</label>
+        <select id="rsa-key-mode">
+          <option value="auto">Tự động tạo</option>
+          <option value="manual">Nhập thủ công</option>
+        </select>
+
+        <label for="rsa-public-key">PUBLIC KEY</label>
+        <textarea id="rsa-public-key" readonly></textarea>
+
+        <label for="rsa-secret-key">SECRET KEY</label>
+        <textarea id="rsa-secret-key" readonly></textarea>
+
+        <button id="rsa-generate-keys" type="button" class="btn btn-secondary">Tạo lại cặp khóa RSA</button>
+
+        <label for="rsa-direction">Chiều xử lý</label>
+        <select id="rsa-direction">
+          <option value="encrypt">Mã hóa</option>
+          <option value="decrypt">Giải mã</option>
+        </select>
+
+        <label id="rsa-input-label" for="rsa-input">PLAINTEXT</label>
+        <textarea id="rsa-input">HELLO RSA</textarea>
+
+        <button id="rsa-run" type="button" class="btn btn-primary" disabled>Mã hóa RSA</button>
+
+        <label>Kết quả</label>
+        <div id="rsa-result" class="output"></div>
+        <p id="rsa-status" role="status"></p>
+      </section>
+    </main>
+
+    <script src="index.js" defer></script>
+  </body>
+</html>
