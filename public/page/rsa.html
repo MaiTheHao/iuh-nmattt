@@ -57,6 +57,7 @@
         <div id="rsa-result" class="output"></div>
         <p id="rsa-status" role="status"></p>
       </section>
+
     </main>
 
     <script>
@@ -84,33 +85,12 @@
       }
 
       function showError(error) {
-        const message = error?.message || 'Đã xảy ra lỗi.';
-        alert(message.includes('DECODER routines::unsupported') ? 'Khóa RSA không hợp lệ.' : message);
+        alert(error?.message || 'Đã xảy ra lỗi.');
       }
 
-      function toBase64(buffer) {
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        return btoa(binary);
-      }
-
+      // Khoá do server sinh bằng lib RSA tự cài đặt (n = p·q, d = e⁻¹ mod φ(n))
       async function createRsaKeyPair() {
-        const pair = await crypto.subtle.generateKey(
-          {
-            name: 'RSA-OAEP',
-            modulusLength: 2048,
-            publicExponent: Uint8Array.of(1, 0, 1),
-            hash: 'SHA-256',
-          },
-          true,
-          ['encrypt', 'decrypt'],
-        );
-
-        return {
-          publicKey: toBase64(await crypto.subtle.exportKey('spki', pair.publicKey)),
-          secretKey: toBase64(await crypto.subtle.exportKey('pkcs8', pair.privateKey)),
-        };
+        return callCryptoApi('rsa-keygen', {});
       }
 
       const keyModeEl = $('rsa-key-mode');
@@ -134,14 +114,16 @@
         keyModeEl.disabled = true;
         publicKeyEl.value = '';
         secretKeyEl.value = '';
+        setStatus('Đang sinh khoá 2048-bit…');
         updateRunButtonState();
 
         try {
           const pair = await createRsaKeyPair();
           publicKeyEl.value = pair.publicKey;
-          secretKeyEl.value = pair.secretKey;
-        } catch {
-          alert('Không tạo được cặp khóa RSA trong trình duyệt này.');
+          secretKeyEl.value = pair.privateKey;
+          setStatus('Đã sinh khoá bằng lib RSA tự cài đặt.');
+        } catch (error) {
+          showError(error);
         } finally {
           generateBtn.disabled = false;
           keyModeEl.disabled = false;
