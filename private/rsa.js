@@ -20,8 +20,10 @@ function modPow(base, exponent, modulus) {
 }
 
 function modInverse(a, modulus) {
-  let oldR = a, r = modulus;
-  let oldS = 1n, s = 0n;
+  let oldR = a,
+    r = modulus;
+  let oldS = 1n,
+    s = 0n;
   while (r !== 0n) {
     const q = oldR / r;
     [oldR, r] = [r, oldR - q * r];
@@ -42,6 +44,16 @@ function toBytes(value) {
 
 function fromBytes(bytes) {
   return bytes.length ? BigInt(`0x${bytes.toString('hex')}`) : 0n;
+}
+
+function keyByteLength(n) {
+  return Math.ceil(n.toString(2).length / 8);
+}
+
+function toFixedBytes(value, length) {
+  const bytes = toBytes(value);
+  if (bytes.length > length) throw new Error('Giá trị vượt quá độ dài khóa.');
+  return Buffer.concat([Buffer.alloc(length - bytes.length), bytes]);
 }
 
 function buildKeyPair(p, q, e = PUBLIC_EXPONENT) {
@@ -145,28 +157,39 @@ function encryptText(text, publicKey) {
   if (e == null) throw new Error('Khóa công khai không hợp lệ.');
 
   const data = Buffer.from(text, 'utf8');
-  const blockSize = Math.max(1, Math.ceil(n.toString(2).length / 8) - 1);
+  const keyBytes = keyByteLength(n);
+  const blockSize = Math.max(1, keyBytes - 1);
 
   const ciphertext = [];
   for (let offset = 0; offset < data.length; offset += blockSize) {
     const chunk = data.subarray(offset, offset + blockSize);
     const m = fromBytes(chunk);
-    ciphertext.push(modPow(m, e, n).toString());
+    ciphertext.push(toFixedBytes(modPow(m, e, n), keyBytes).toString('base64'));
   }
 
   return { ciphertext };
+}
+
+function decodeBlocks(input) {
+  return input
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((block) => {
+      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(block) || block.length % 4 !== 0) {
+        throw new Error('Giá trị ciphertext không hợp lệ.');
+      }
+      return fromBytes(Buffer.from(block, 'base64'));
+    });
 }
 
 function decryptText(ciphertext, privateKey) {
   const { d, n } = parseKey(privateKey);
   if (d == null) throw new Error('Khóa bí mật không hợp lệ.');
 
-  const blocks = Array.isArray(ciphertext)
-    ? ciphertext
-    : String(ciphertext).trim().split(/[\s,]+/).filter(Boolean);
+  const input = Array.isArray(ciphertext) ? ciphertext.join(' ') : String(ciphertext ?? '');
+  if (!input.trim()) return '';
 
-  const bytes = blocks.map((block) => {
-    const c = BigInt(String(block).trim());
+  const bytes = decodeBlocks(input).map((c) => {
     if (c >= n) throw new Error('Giá trị ciphertext không hợp lệ.');
     return toBytes(modPow(c, d, n));
   });
@@ -174,13 +197,4 @@ function decryptText(ciphertext, privateKey) {
   return Buffer.concat(bytes).toString('utf8');
 }
 
-export {
-  gcd,
-  modPow,
-  modInverse,
-  isPrime,
-  buildKeyPair,
-  generateKeyPair,
-  encryptText,
-  decryptText,
-};
+export { gcd, modPow, modInverse, isPrime, buildKeyPair, generateKeyPair, encryptText, decryptText };

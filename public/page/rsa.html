@@ -172,7 +172,7 @@
             ? { key, plaintext: inputEl.value }
             : { key, ciphertext: inputEl.value };
           const result = await callCryptoApi(isEncrypt ? 'rsa-encrypt' : 'rsa-decrypt', payload);
-          resultEl.textContent = isEncrypt ? result.ciphertext.join(' ') : result.plaintext;
+          resultEl.textContent = isEncrypt ? result.ciphertext.join('\n') : result.plaintext;
           setStatus(isEncrypt ? 'Đã mã hóa RSA.' : 'Đã giải mã RSA.');
         } catch (error) {
           showError(error);
