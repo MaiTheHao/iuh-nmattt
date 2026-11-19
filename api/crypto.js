@@ -1,10 +1,11 @@
-import { aesDecrypt, aesEncrypt, rsaDecrypt, rsaEncrypt } from '../private/service/crypto.js';
+import { RSAService } from '../private/service/RSAService.js';
+import { AESService } from '../private/service/AESService.js';
 
 const operations = {
-  'rsa-encrypt': rsaEncrypt,
-  'rsa-decrypt': rsaDecrypt,
-  'aes-encrypt': aesEncrypt,
-  'aes-decrypt': aesDecrypt,
+  'rsa-encrypt': (payload) => RSAService.encrypt(payload),
+  'rsa-decrypt': (payload) => RSAService.decrypt(payload),
+  'aes-encrypt': (payload) => AESService.encrypt(payload),
+  'aes-decrypt': (payload) => AESService.decrypt(payload),
 };
 
 export default async function handler(req, res) {

@@ -48,6 +48,73 @@
       </section>
     </main>
 
-    <script src="../index.js" defer></script>
+    <script>
+      'use strict';
+
+      const API_URL = '/api/crypto';
+      const $ = (id) => document.getElementById(id);
+
+      async function callCryptoApi(action, payload) {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, payload }),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || `Yêu cầu thất bại (${response.status})`);
+        }
+        return result;
+      }
+
+      function setStatus(message) {
+        const el = $('aes-status');
+        if (el) el.textContent = message;
+      }
+
+      function showError(error) {
+        alert(error?.message || 'Đã xảy ra lỗi.');
+      }
+
+      const directionEl = $('aes-direction');
+      const inputLabelEl = $('aes-input-label');
+      const inputEl = $('aes-input');
+      const keyEl = $('aes-key');
+      const runBtn = $('aes-run');
+      const resultEl = $('aes-result');
+
+      function handleDirectionChange() {
+        const isEncrypt = directionEl.value === 'encrypt';
+        inputLabelEl.textContent = isEncrypt ? 'PLAINTEXT' : 'CIPHERTEXT';
+        inputEl.placeholder = isEncrypt ? '' : 'IV:ciphertext';
+        runBtn.textContent = isEncrypt ? 'Mã hóa AES-CBC' : 'Giải mã AES-CBC';
+        if (resultEl.value) {
+          inputEl.value = resultEl.value;
+        }
+      }
+
+      async function handleRun() {
+        const isEncrypt = directionEl.value === 'encrypt';
+        runBtn.disabled = true;
+        setStatus(isEncrypt ? 'Đang mã hóa…' : 'Đang giải mã…');
+        try {
+          const result = await callCryptoApi(isEncrypt ? 'aes-encrypt' : 'aes-decrypt', {
+            secretKey: keyEl.value,
+            [isEncrypt ? 'plaintext' : 'ciphertext']: inputEl.value,
+          });
+          resultEl.value = isEncrypt ? `${result.iv}:${result.ciphertext}` : result.plaintext;
+          setStatus(isEncrypt ? 'Đã mã hóa AES-CBC.' : 'Đã giải mã AES-CBC.');
+        } catch (error) {
+          showError(error);
+        } finally {
+          runBtn.disabled = false;
+        }
+      }
+
+      directionEl.addEventListener('change', handleDirectionChange);
+      runBtn.addEventListener('click', handleRun);
+
+      handleDirectionChange();
+    </script>
   </body>
 </html>
