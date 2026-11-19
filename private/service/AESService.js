@@ -1,14 +1,14 @@
 import { createHash, randomBytes } from 'node:crypto';
 import * as aes from '../lib/aes.js';
 
-const ERR_SECRET_KEY_REQUIRED = 'SECRET KEY không được để trống.';
+const ERR_PRIVATE_KEY_REQUIRED = 'PRIVATE KEY không được để trống.';
 const ERR_AES_KEY_INVALID = 'AES key không hợp lệ.';
 const ERR_CIPHERTEXT_INVALID = 'Ciphertext AES không hợp lệ.';
 const ERR_ENVELOPE_REQUIRED = 'Ciphertext AES cần có iv và ciphertext.';
 
 function aesKey(secretKey, isRawKey = false) {
   if (typeof secretKey !== 'string' || !secretKey) {
-    throw new Error(ERR_SECRET_KEY_REQUIRED);
+    throw new Error(ERR_PRIVATE_KEY_REQUIRED);
   }
   if (isRawKey) {
     const key = Buffer.from(secretKey, 'base64');

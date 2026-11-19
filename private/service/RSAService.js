@@ -3,7 +3,7 @@ import { constants, createPrivateKey, createPublicKey, privateDecrypt, publicEnc
 const ERR_KEY_REQUIRED = (name) => `${name} không được để trống.`;
 const ERR_KEY_INVALID = (name) => `${name} không hợp lệ.`;
 const ERR_PUBLIC_KEY_NOT_RSA = 'PUBLIC KEY phải là khóa RSA.';
-const ERR_SECRET_KEY_NOT_RSA = 'SECRET KEY phải là khóa RSA.';
+const ERR_PRIVATE_KEY_NOT_RSA = 'PRIVATE KEY phải là khóa RSA.';
 const ERR_CIPHERTEXT_INVALID = 'Ciphertext RSA không hợp lệ.';
 const ERR_CIPHERTEXT_NOT_ARRAY = 'Ciphertext RSA phải là mảng JSON.';
 const ERR_BLOCK_NOT_BASE64 = 'Mỗi block ciphertext RSA phải là chuỗi Base64.';
@@ -76,8 +76,8 @@ export class RSAService {
   }
 
   static decrypt({ key, ciphertext }) {
-    const privateKey = createPrivateKey(formatKey(key, 'PRIVATE KEY', 'SECRET KEY'));
-    if (privateKey.asymmetricKeyType !== 'rsa') throw new Error(ERR_SECRET_KEY_NOT_RSA);
+    const privateKey = createPrivateKey(formatKey(key, 'PRIVATE KEY', 'PRIVATE KEY'));
+    if (privateKey.asymmetricKeyType !== 'rsa') throw new Error(ERR_PRIVATE_KEY_NOT_RSA);
 
     const plaintext = readRsaCiphertext(ciphertext).map((block) =>
       privateDecrypt(

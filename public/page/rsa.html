@@ -25,7 +25,7 @@
       <section>
         <h2>1. RSA — 2048 bit</h2>
         <p class="desc">
-          Mã hóa và giải mã sử dụng cặp khóa công khai (Public Key) và khóa bí mật (Secret Key).
+          Mã hóa và giải mã sử dụng cặp khóa công khai (Public Key) và khóa bí mật (Private Key).
         </p>
 
         <label for="rsa-key-mode">Sinh khóa</label>
@@ -37,7 +37,7 @@
         <label for="rsa-public-key">PUBLIC KEY</label>
         <textarea id="rsa-public-key" readonly></textarea>
 
-        <label for="rsa-secret-key">SECRET KEY</label>
+        <label for="rsa-secret-key">PRIVATE KEY</label>
         <textarea id="rsa-secret-key" readonly></textarea>
 
         <button id="rsa-generate-keys" type="button" class="btn btn-secondary">Tạo lại cặp khóa RSA</button>
@@ -180,7 +180,7 @@
         const isEncrypt = directionEl.value === 'encrypt';
         const key = isEncrypt ? publicKeyEl.value : secretKeyEl.value;
         if (!key.trim()) {
-          return alert(isEncrypt ? 'Cần nhập PUBLIC KEY.' : 'Cần nhập SECRET KEY.');
+          return alert(isEncrypt ? 'Cần nhập PUBLIC KEY.' : 'Cần nhập PRIVATE KEY.');
         }
 
         runBtn.disabled = true;
