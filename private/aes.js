@@ -35,8 +35,8 @@ function decryptText(ciphertext, secretKey) {
   const iv = Buffer.from(parts[0], 'base64');
   if (iv.length !== IV_LENGTH) throw new Error('IV phải dài đúng 16 byte.');
 
-  const data = Buffer.from(parts[1], 'base64');
-  if (data.length === 0 || data.length % IV_LENGTH !== 0) {
+  const _ciphertext = Buffer.from(parts[1], 'base64');
+  if (_ciphertext.length === 0 || _ciphertext.length % IV_LENGTH !== 0) {
     throw new Error('Ciphertext phải là bội số của 16 byte.');
   }
 
