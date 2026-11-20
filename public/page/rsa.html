@@ -23,7 +23,7 @@
 
     <main>
       <section>
-        <h2>1. RSA — 2048 bit</h2>
+        <h2>1. RSA — 256 bit</h2>
         <p class="desc">
           Mã hóa và giải mã sử dụng cặp khóa công khai (Public Key) và khóa bí mật (Private Key).
         </p>
@@ -66,33 +66,6 @@
       const API_URL = '/api/crypto';
       const $ = (id) => document.getElementById(id);
 
-      async function callCryptoApi(action, payload) {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action, payload }),
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.error || `Yêu cầu thất bại (${response.status})`);
-        }
-        return result;
-      }
-
-      function setStatus(message) {
-        const el = $('rsa-status');
-        if (el) el.textContent = message;
-      }
-
-      function showError(error) {
-        alert(error?.message || 'Đã xảy ra lỗi.');
-      }
-
-      // Khoá do server sinh bằng lib RSA tự cài đặt (n = p·q, d = e⁻¹ mod φ(n))
-      async function createRsaKeyPair() {
-        return callCryptoApi('rsa-keygen', {});
-      }
-
       const keyModeEl = $('rsa-key-mode');
       const publicKeyEl = $('rsa-public-key');
       const secretKeyEl = $('rsa-secret-key');
@@ -102,94 +75,131 @@
       const inputEl = $('rsa-input');
       const runBtn = $('rsa-run');
       const resultEl = $('rsa-result');
+      const statusEl = $('rsa-status');
 
-      function updateRunButtonState() {
-        const isEncrypt = directionEl.value === 'encrypt';
-        const key = isEncrypt ? publicKeyEl.value : secretKeyEl.value;
-        runBtn.disabled = !key || !key.trim();
+      async function callCryptoApi(action, payload) {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, payload }),
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || `Yêu cầu thất bại (${response.status})`);
+        }
+
+        return result;
       }
 
-      async function generateKeys() {
+      function setStatus(message) {
+        statusEl.textContent = message;
+      }
+
+      function showError(error) {
+        alert(error?.message || 'Đã xảy ra lỗi.');
+      }
+
+      function requestKeyPair() {
+        return callCryptoApi('rsa-keygen', {});
+      }
+
+      function updateRunButton() {
+        const isEncrypt = directionEl.value === 'encrypt';
+        const key = isEncrypt ? publicKeyEl.value : secretKeyEl.value;
+        runBtn.disabled = !key.trim();
+      }
+
+      function handleDirectionChange() {
+        const isEncrypt = directionEl.value === 'encrypt';
+
+        inputLabelEl.textContent = isEncrypt ? 'PLAINTEXT' : 'CIPHERTEXT';
+        runBtn.textContent = isEncrypt ? 'Mã hóa RSA' : 'Giải mã RSA';
+        inputEl.placeholder = isEncrypt ? 'HELLO RSA' : 'Dán ciphertext base64';
+
+        if (resultEl.textContent) {
+          inputEl.value = resultEl.textContent;
+        }
+
+        updateRunButton();
+      }
+
+      async function handleKeyModeChange() {
+        const isAuto = keyModeEl.value === 'auto';
+
+        publicKeyEl.readOnly = isAuto;
+        secretKeyEl.readOnly = isAuto;
+        publicKeyEl.placeholder = isAuto ? '' : 'Dán public key base64';
+        secretKeyEl.placeholder = isAuto ? '' : 'Dán private key base64';
+        generateBtn.hidden = !isAuto;
+
+        if (isAuto) {
+          await handleGenerateKeys();
+        } else {
+          publicKeyEl.value = '';
+          secretKeyEl.value = '';
+          updateRunButton();
+        }
+      }
+
+      async function handleGenerateKeys() {
         generateBtn.disabled = true;
         keyModeEl.disabled = true;
         publicKeyEl.value = '';
         secretKeyEl.value = '';
-        setStatus('Đang sinh khoá 2048-bit…');
-        updateRunButtonState();
+        setStatus('Đang sinh khóa 256-bit…');
+        updateRunButton();
 
         try {
-          const pair = await createRsaKeyPair();
+          const pair = await requestKeyPair();
           publicKeyEl.value = pair.publicKey;
           secretKeyEl.value = pair.privateKey;
-          setStatus('Đã sinh khoá bằng lib RSA tự cài đặt.');
+          setStatus('Đã sinh khóa RSA 256-bit.');
         } catch (error) {
           showError(error);
         } finally {
           generateBtn.disabled = false;
           keyModeEl.disabled = false;
-          updateRunButtonState();
+          updateRunButton();
         }
-      }
-
-      function handleKeyModeChange() {
-        const isAuto = keyModeEl.value === 'auto';
-        publicKeyEl.readOnly = isAuto;
-        secretKeyEl.readOnly = isAuto;
-        publicKeyEl.placeholder = isAuto ? '' : 'Nhập public key';
-        secretKeyEl.placeholder = isAuto ? '' : 'Nhập secret key';
-        generateBtn.hidden = !isAuto;
-
-        if (isAuto) {
-          generateKeys();
-        } else {
-          publicKeyEl.value = '';
-          secretKeyEl.value = '';
-          updateRunButtonState();
-        }
-      }
-
-      function handleDirectionChange() {
-        const isEncrypt = directionEl.value === 'encrypt';
-        inputLabelEl.textContent = isEncrypt ? 'PLAINTEXT' : 'CIPHERTEXT';
-        runBtn.textContent = isEncrypt ? 'Mã hóa RSA' : 'Giải mã RSA';
-        if (resultEl.textContent) {
-          inputEl.value = resultEl.textContent;
-        }
-        updateRunButtonState();
       }
 
       async function handleRun() {
         const isEncrypt = directionEl.value === 'encrypt';
         const key = isEncrypt ? publicKeyEl.value : secretKeyEl.value;
+
         if (!key.trim()) {
-          return alert(isEncrypt ? 'Cần nhập PUBLIC KEY.' : 'Cần nhập PRIVATE KEY.');
+          showError(new Error(isEncrypt ? 'Cần nhập PUBLIC KEY.' : 'Cần nhập PRIVATE KEY.'));
+          return;
         }
 
         runBtn.disabled = true;
         setStatus(isEncrypt ? 'Đang mã hóa…' : 'Đang giải mã…');
+
         try {
           const payload = isEncrypt
             ? { key, plaintext: inputEl.value }
             : { key, ciphertext: inputEl.value };
           const result = await callCryptoApi(isEncrypt ? 'rsa-encrypt' : 'rsa-decrypt', payload);
+
           resultEl.textContent = isEncrypt ? result.ciphertext.join('\n') : result.plaintext;
           setStatus(isEncrypt ? 'Đã mã hóa RSA.' : 'Đã giải mã RSA.');
         } catch (error) {
           showError(error);
         } finally {
-          updateRunButtonState();
+          updateRunButton();
         }
       }
 
       keyModeEl.addEventListener('change', handleKeyModeChange);
-      generateBtn.addEventListener('click', generateKeys);
-      publicKeyEl.addEventListener('input', updateRunButtonState);
-      secretKeyEl.addEventListener('input', updateRunButtonState);
+      generateBtn.addEventListener('click', handleGenerateKeys);
+      publicKeyEl.addEventListener('input', updateRunButton);
+      secretKeyEl.addEventListener('input', updateRunButton);
       directionEl.addEventListener('change', handleDirectionChange);
       runBtn.addEventListener('click', handleRun);
 
       handleDirectionChange();
-      generateKeys();
+      handleGenerateKeys();
     </script>
   </body>
 </html>

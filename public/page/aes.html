@@ -34,7 +34,7 @@
           <option value="decrypt">Giải mã</option>
         </select>
 
-        <label for="aes-key">PRIVATE KEY</label>
+        <label for="aes-key">SECRET KEY</label>
         <input id="aes-key" value="bi-mat-cua-toi" />
 
         <label id="aes-input-label" for="aes-input">PLAINTEXT</label>
@@ -42,8 +42,8 @@
 
         <button id="aes-run" type="button" class="btn btn-primary">Mã hóa AES-CBC</button>
 
-        <label for="aes-result">Kết quả</label>
-        <input id="aes-result" class="output" readonly />
+        <label>Kết quả</label>
+        <div id="aes-result" class="output"></div>
         <p id="aes-status" role="status"></p>
       </section>
     </main>
@@ -54,63 +54,83 @@
       const API_URL = '/api/crypto';
       const $ = (id) => document.getElementById(id);
 
+      const keyEl = $('aes-key');
+      const directionEl = $('aes-direction');
+      const inputLabelEl = $('aes-input-label');
+      const inputEl = $('aes-input');
+      const runBtn = $('aes-run');
+      const resultEl = $('aes-result');
+      const statusEl = $('aes-status');
+
       async function callCryptoApi(action, payload) {
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action, payload }),
         });
+
         const result = await response.json();
         if (!response.ok) {
           throw new Error(result.error || `Yêu cầu thất bại (${response.status})`);
         }
+
         return result;
       }
 
       function setStatus(message) {
-        const el = $('aes-status');
-        if (el) el.textContent = message;
+        statusEl.textContent = message;
       }
 
       function showError(error) {
         alert(error?.message || 'Đã xảy ra lỗi.');
       }
 
-      const directionEl = $('aes-direction');
-      const inputLabelEl = $('aes-input-label');
-      const inputEl = $('aes-input');
-      const keyEl = $('aes-key');
-      const runBtn = $('aes-run');
-      const resultEl = $('aes-result');
+      function updateRunButton() {
+        runBtn.disabled = !keyEl.value.trim();
+      }
 
       function handleDirectionChange() {
         const isEncrypt = directionEl.value === 'encrypt';
+
         inputLabelEl.textContent = isEncrypt ? 'PLAINTEXT' : 'CIPHERTEXT';
-        inputEl.placeholder = isEncrypt ? '' : 'IV:ciphertext';
         runBtn.textContent = isEncrypt ? 'Mã hóa AES-CBC' : 'Giải mã AES-CBC';
-        if (resultEl.value) {
-          inputEl.value = resultEl.value;
+        inputEl.placeholder = isEncrypt ? 'Hello AES-CBC' : 'IV:ciphertext';
+
+        if (resultEl.textContent) {
+          inputEl.value = resultEl.textContent;
         }
+
+        updateRunButton();
       }
 
       async function handleRun() {
         const isEncrypt = directionEl.value === 'encrypt';
+        const key = keyEl.value;
+
+        if (!key.trim()) {
+          showError(new Error('Cần nhập SECRET KEY.'));
+          return;
+        }
+
         runBtn.disabled = true;
         setStatus(isEncrypt ? 'Đang mã hóa…' : 'Đang giải mã…');
+
         try {
-          const result = await callCryptoApi(isEncrypt ? 'aes-encrypt' : 'aes-decrypt', {
-            secretKey: keyEl.value,
-            [isEncrypt ? 'plaintext' : 'ciphertext']: inputEl.value,
-          });
-          resultEl.value = isEncrypt ? `${result.iv}:${result.ciphertext}` : result.plaintext;
+          const payload = isEncrypt
+            ? { secretKey: key, plaintext: inputEl.value }
+            : { secretKey: key, ciphertext: inputEl.value };
+          const result = await callCryptoApi(isEncrypt ? 'aes-encrypt' : 'aes-decrypt', payload);
+
+          resultEl.textContent = isEncrypt ? result.ciphertext : result.plaintext;
           setStatus(isEncrypt ? 'Đã mã hóa AES-CBC.' : 'Đã giải mã AES-CBC.');
         } catch (error) {
           showError(error);
         } finally {
-          runBtn.disabled = false;
+          updateRunButton();
         }
       }
 
+      keyEl.addEventListener('input', updateRunButton);
       directionEl.addEventListener('change', handleDirectionChange);
       runBtn.addEventListener('click', handleRun);
 

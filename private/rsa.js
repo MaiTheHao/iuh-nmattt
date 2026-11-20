@@ -1,200 +1,126 @@
-import { checkPrimeSync, createPrivateKey, createPublicKey, generatePrimeSync } from 'node:crypto';
+import { generatePrimeSync } from 'node:crypto';
+import { bytesToBigInt, bigIntToBytes, gcd, keyByteLength, modInverse, modPow } from './math.js';
 
-const PUBLIC_EXPONENT = 65537n;
+const E = 65537n;
+const PUBLIC_KEY_PREFIX = 1;
+const PRIVATE_KEY_PREFIX = 2;
 
-function gcd(a, b) {
-  while (b !== 0n) [a, b] = [b, a % b];
-  return a < 0n ? -a : a;
-}
+function generateKeyPair(bits = 256) {
+  const half = bits / 2;
 
-function modPow(base, exponent, modulus) {
-  let result = 1n;
-  let b = ((base % modulus) + modulus) % modulus;
-  let e = exponent;
-  while (e > 0n) {
-    if (e & 1n) result = (result * b) % modulus;
-    b = (b * b) % modulus;
-    e >>= 1n;
-  }
-  return result;
-}
+  for (;;) {
+    const p = generatePrimeSync(half, { bigint: true });
+    const q = generatePrimeSync(half, { bigint: true });
+    if (p === q) continue;
 
-function modInverse(a, modulus) {
-  let oldR = a,
-    r = modulus;
-  let oldS = 1n,
-    s = 0n;
-  while (r !== 0n) {
-    const q = oldR / r;
-    [oldR, r] = [r, oldR - q * r];
-    [oldS, s] = [s, oldS - q * s];
-  }
-  if (oldR !== 1n) throw new Error('Không tồn tại nghịch đảo modulo.');
-  return ((oldS % modulus) + modulus) % modulus;
-}
+    const phi = (p - 1n) * (q - 1n);
+    if (gcd(E, phi) !== 1n) continue;
 
-function isPrime(n) {
-  return typeof n === 'bigint' && n >= 2n && checkPrimeSync(n);
-}
+    const n = p * q;
+    const d = modInverse(E, phi);
+    const keyLength = keyByteLength(n);
 
-function toBytes(value) {
-  const hex = value.toString(16);
-  return Buffer.from(hex.length % 2 ? `0${hex}` : hex, 'hex');
-}
-
-function fromBytes(bytes) {
-  return bytes.length ? BigInt(`0x${bytes.toString('hex')}`) : 0n;
-}
-
-function keyByteLength(n) {
-  return Math.ceil(n.toString(2).length / 8);
-}
-
-function toFixedBytes(value, length) {
-  const bytes = toBytes(value);
-  if (bytes.length > length) throw new Error('Giá trị vượt quá độ dài khóa.');
-  return Buffer.concat([Buffer.alloc(length - bytes.length), bytes]);
-}
-
-function buildKeyPair(p, q, e = PUBLIC_EXPONENT) {
-  if (!isPrime(p) || !isPrime(q) || p === q) {
-    throw new Error('p, q phải là số nguyên tố phân biệt.');
-  }
-
-  const n = p * q;
-  const phi = (p - 1n) * (q - 1n);
-
-  if (gcd(e, phi) !== 1n) {
-    throw new Error('gcd(e, phi) phải bằng 1.');
-  }
-
-  const d = modInverse(e, phi);
-
-  const privateKeyObj = createPrivateKey({
-    format: 'jwk',
-    key: {
-      kty: 'RSA',
-      n: toBytes(n).toString('base64url'),
-      e: toBytes(e).toString('base64url'),
-      d: toBytes(d).toString('base64url'),
-      p: toBytes(p).toString('base64url'),
-      q: toBytes(q).toString('base64url'),
-      dp: toBytes(d % (p - 1n)).toString('base64url'),
-      dq: toBytes(d % (q - 1n)).toString('base64url'),
-      qi: toBytes(modInverse(q, p)).toString('base64url'),
-    },
-  });
-
-  return {
-    publicKey: createPublicKey(privateKeyObj).export({ type: 'spki', format: 'pem' }),
-    privateKey: privateKeyObj.export({ type: 'pkcs8', format: 'pem' }),
-  };
-}
-
-function generateKeyPair(bits = 2048) {
-  const primeBits = bits / 2;
-  for (let i = 0; i < 10; i++) {
-    const p = generatePrimeSync(primeBits, { bigint: true });
-    let q = generatePrimeSync(primeBits, { bigint: true });
-    while (q === p) {
-      q = generatePrimeSync(primeBits, { bigint: true });
-    }
-    try {
-      return buildKeyPair(p, q, PUBLIC_EXPONENT);
-    } catch {
-      continue;
-    }
-  }
-  throw new Error('Không thể sinh cặp khóa RSA.');
-}
-
-function formatPem(key, type) {
-  const text = String(key || '').trim();
-  if (text.includes('-----BEGIN')) return text;
-  const lines = text.replace(/\s+/g, '').match(/.{1,64}/g);
-  if (!lines) throw new Error('Khóa RSA không hợp lệ.');
-  return `-----BEGIN ${type}-----\n${lines.join('\n')}\n-----END ${type}-----`;
-}
-
-function parseKey(key) {
-  if (key && typeof key === 'object' && key.n != null) {
     return {
-      n: BigInt(key.n),
-      e: key.e != null ? BigInt(key.e) : null,
-      d: key.d != null ? BigInt(key.d) : null,
+      publicKey: encodeKey(PUBLIC_KEY_PREFIX, bigIntToBytes(n, keyLength)),
+      privateKey: encodeKey(PRIVATE_KEY_PREFIX, bigIntToBytes(n, keyLength), bigIntToBytes(d, keyLength)),
     };
   }
-
-  if (typeof key === 'string' && key.trim().startsWith('{')) {
-    try {
-      return parseKey(JSON.parse(key));
-    } catch {}
-  }
-
-  for (const type of ['PRIVATE KEY', 'PUBLIC KEY']) {
-    try {
-      const pem = formatPem(key, type);
-      const keyObj = type === 'PRIVATE KEY' ? createPrivateKey(pem) : createPublicKey(pem);
-      if (keyObj.asymmetricKeyType !== 'rsa') continue;
-      const jwk = keyObj.export({ format: 'jwk' });
-      return {
-        n: fromBytes(Buffer.from(jwk.n, 'base64url')),
-        e: jwk.e ? fromBytes(Buffer.from(jwk.e, 'base64url')) : null,
-        d: jwk.d ? fromBytes(Buffer.from(jwk.d, 'base64url')) : null,
-      };
-    } catch {}
-  }
-
-  throw new Error('Khóa RSA không hợp lệ.');
 }
 
-function encryptText(text, publicKey) {
-  if (typeof text !== 'string') {
-    throw new TypeError('Plaintext phải là chuỗi.');
+function encodeKey(prefix, ...parts) {
+  return Buffer.concat([Buffer.from([prefix]), ...parts]).toString('base64');
+}
+
+function fromBase64(text, label) {
+  const clean = String(text ?? '').replace(/\s+/g, '');
+
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(clean) || clean.length % 4 !== 0) {
+    throw new Error(`${label} phải là chuỗi base64 hợp lệ.`);
   }
 
-  const { e, n } = parseKey(publicKey);
-  if (e == null) throw new Error('Khóa công khai không hợp lệ.');
+  return Buffer.from(clean, 'base64');
+}
+
+function parsePublicKey(text) {
+  const bytes = fromBase64(text, 'Public key');
+  if (bytes[0] !== PUBLIC_KEY_PREFIX) throw new Error('Đây không phải public key.');
+
+  const n = bytesToBigInt(bytes.subarray(1));
+
+  if (keyByteLength(n) !== bytes.length - 1) throw new Error('Public key không hợp lệ.');
+  return { n, e: E };
+}
+
+function parsePrivateKey(text) {
+  const bytes = fromBase64(text, 'Private key');
+  if (bytes[0] !== PRIVATE_KEY_PREFIX) throw new Error('Đây không phải private key.');
+
+  const body = bytes.subarray(1);
+  if (body.length % 2 !== 0) throw new Error('Private key không hợp lệ.');
+
+  const half = body.length / 2;
+  const n = bytesToBigInt(body.subarray(0, half));
+  const d = bytesToBigInt(body.subarray(half));
+
+  if (keyByteLength(n) !== half) throw new Error('Private key không hợp lệ.');
+  return { n, d };
+}
+
+function encryptText(text, publicKeyText) {
+  if (typeof text !== 'string') throw new TypeError('Plaintext phải là chuỗi.');
+
+  const { n, e } = parsePublicKey(publicKeyText);
+
+  const keyLength = keyByteLength(n);
+  const blockSize = keyLength - 1;
+  if (blockSize < 1) throw new Error('Modulus n quá nhỏ.');
 
   const data = Buffer.from(text, 'utf8');
-  const keyBytes = keyByteLength(n);
-  const blockSize = Math.max(1, keyBytes - 1);
-
   const ciphertext = [];
+
   for (let offset = 0; offset < data.length; offset += blockSize) {
-    const chunk = data.subarray(offset, offset + blockSize);
-    const m = fromBytes(chunk);
-    ciphertext.push(toFixedBytes(modPow(m, e, n), keyBytes).toString('base64'));
+    const m = bytesToBigInt(data.subarray(offset, offset + blockSize));
+    ciphertext.push(bigIntToBytes(modPow(m, e, n), keyLength).toString('base64'));
   }
 
   return { ciphertext };
 }
 
-function decodeBlocks(input) {
-  return input
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((block) => {
-      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(block) || block.length % 4 !== 0) {
-        throw new Error('Giá trị ciphertext không hợp lệ.');
-      }
-      return fromBytes(Buffer.from(block, 'base64'));
-    });
-}
-
-function decryptText(ciphertext, privateKey) {
-  const { d, n } = parseKey(privateKey);
-  if (d == null) throw new Error('Khóa bí mật không hợp lệ.');
+function decryptText(ciphertext, privateKeyText) {
+  const { n, d } = parsePrivateKey(privateKeyText);
 
   const input = Array.isArray(ciphertext) ? ciphertext.join(' ') : String(ciphertext ?? '');
-  if (!input.trim()) return '';
+  const blocks = input.split(/\s+/).filter(Boolean);
+  if (!blocks.length) return '';
 
-  const bytes = decodeBlocks(input).map((c) => {
+  const keyLength = keyByteLength(n);
+  const blockSize = keyLength - 1;
+  if (blockSize < 1) throw new Error('Modulus n quá nhỏ.');
+
+  const parts = [];
+
+  for (const block of blocks) {
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(block) || block.length % 4 !== 0) {
+      throw new Error('Ciphertext phải là base64 hợp lệ.');
+    }
+
+    const bytes = Buffer.from(block, 'base64');
+    if (bytes.length !== keyLength) {
+      throw new Error(`Mỗi block ciphertext phải dài đúng ${keyLength} byte.`);
+    }
+
+    const c = bytesToBigInt(bytes);
     if (c >= n) throw new Error('Giá trị ciphertext không hợp lệ.');
-    return toBytes(modPow(c, d, n));
-  });
 
-  return Buffer.concat(bytes).toString('utf8');
+    const plain = bigIntToBytes(modPow(c, d, n));
+    if (plain.length > blockSize) {
+      throw new Error('Giải mã thất bại: sai khóa hoặc ciphertext bị hỏng.');
+    }
+
+    parts.push(plain);
+  }
+
+  return Buffer.concat(parts).toString('utf8');
 }
 
-export { gcd, modPow, modInverse, isPrime, buildKeyPair, generateKeyPair, encryptText, decryptText };
+export { generateKeyPair, encryptText, decryptText };
