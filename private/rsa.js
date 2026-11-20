@@ -56,7 +56,7 @@ function parsePrivateKey(text) {
   if (bytes[0] !== PRIVATE_KEY_PREFIX) throw new Error('Đây không phải private key.');
 
   const body = bytes.subarray(1);
-  if (body.length % 2 !== 0) throw new Error('Private key không hợp lệ.');
+  if (body.length !== 64) throw new Error('Private key không hợp lệ.');
 
   const half = body.length / 2;
   const n = bytesToBigInt(body.subarray(0, half));
@@ -89,7 +89,7 @@ function encryptText(text, publicKeyText) {
 function decryptText(ciphertext, privateKeyText) {
   const { n, d } = parsePrivateKey(privateKeyText);
 
-  const input = Array.isArray(ciphertext) ? ciphertext.join(' ') : String(ciphertext ?? '');
+  const input = String(ciphertext ?? '');
   const blocks = input.split(/\s+/).filter(Boolean);
   if (!blocks.length) return '';
 

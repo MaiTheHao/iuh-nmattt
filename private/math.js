@@ -39,7 +39,10 @@ function keyByteLength(n) {
 
 function bytesToBigInt(bytes) {
   let value = 0n;
-  for (const byte of bytes) value = (value << 8n) | BigInt(byte);
+  
+  for (const byte of bytes) {
+    value = value * 256n + BigInt(byte);
+  }
   return value;
 }
 
