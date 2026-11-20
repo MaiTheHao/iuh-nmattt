@@ -45,7 +45,7 @@ function decryptText(ciphertext, secretKey) {
   try {
     // AES core, chạy các bước AES core + CBC (vì quá khó hiểu nên team dùng func có sẵn của node:crypto)
     const decipher = createDecipheriv(ALGORITHM, key, iv);
-    return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');
+    return Buffer.concat([decipher.update(_ciphertext), decipher.final()]).toString('utf8');
   } catch {
     throw new Error('Sai khóa hoặc ciphertext bị hỏng.');
   }
