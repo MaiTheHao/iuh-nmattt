@@ -46,11 +46,13 @@ function bytesToBigInt(bytes) {
 function bigIntToBytes(value, length = 0) {
   const bytes = [];
 
+  // Convert BigInt value -> Mảng các bytes (1byte = 8bit <=> n = 2^8 = 256)
   while (value > 0n) {
     bytes.unshift(Number(value % 256n));
     value /= 256n;
   }
 
+  // Chèn để mảng bytes đủ `length`
   while (bytes.length < length) bytes.unshift(0);
 
   return Buffer.from(bytes);

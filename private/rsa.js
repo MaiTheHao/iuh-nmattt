@@ -13,10 +13,10 @@ function generateKeyPair(bits = 256) {
     const q = generatePrimeSync(half, { bigint: true });
     if (p === q) continue;
 
+    const n = p * q;
     const phi = (p - 1n) * (q - 1n);
     if (gcd(E, phi) !== 1n) continue;
 
-    const n = p * q;
     const d = modInverse(E, phi);
     const keyLength = keyByteLength(n);
 
@@ -83,7 +83,7 @@ function encryptText(text, publicKeyText) {
     ciphertext.push(bigIntToBytes(modPow(m, e, n), keyLength).toString('base64'));
   }
 
-  return { ciphertext };
+  return ciphertext.join(' ');
 }
 
 function decryptText(ciphertext, privateKeyText) {

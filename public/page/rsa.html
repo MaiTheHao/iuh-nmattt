@@ -55,7 +55,6 @@
 
         <label>Kết quả</label>
         <div id="rsa-result" class="output"></div>
-        <p id="rsa-status" role="status"></p>
       </section>
 
     </main>
@@ -75,7 +74,6 @@
       const inputEl = $('rsa-input');
       const runBtn = $('rsa-run');
       const resultEl = $('rsa-result');
-      const statusEl = $('rsa-status');
 
       async function callCryptoApi(action, payload) {
         const response = await fetch(API_URL, {
@@ -90,10 +88,6 @@
         }
 
         return result;
-      }
-
-      function setStatus(message) {
-        statusEl.textContent = message;
       }
 
       function showError(error) {
@@ -147,14 +141,12 @@
         keyModeEl.disabled = true;
         publicKeyEl.value = '';
         secretKeyEl.value = '';
-        setStatus('Đang sinh khóa 256-bit…');
         updateRunButton();
 
         try {
           const pair = await requestKeyPair();
           publicKeyEl.value = pair.publicKey;
           secretKeyEl.value = pair.privateKey;
-          setStatus('Đã sinh khóa RSA 256-bit.');
         } catch (error) {
           showError(error);
         } finally {
@@ -174,7 +166,6 @@
         }
 
         runBtn.disabled = true;
-        setStatus(isEncrypt ? 'Đang mã hóa…' : 'Đang giải mã…');
 
         try {
           const payload = isEncrypt
@@ -182,8 +173,7 @@
             : { key, ciphertext: inputEl.value };
           const result = await callCryptoApi(isEncrypt ? 'rsa-encrypt' : 'rsa-decrypt', payload);
 
-          resultEl.textContent = isEncrypt ? result.ciphertext.join('\n') : result.plaintext;
-          setStatus(isEncrypt ? 'Đã mã hóa RSA.' : 'Đã giải mã RSA.');
+          resultEl.textContent = isEncrypt ? result.split(' ').join('\n') : result.plaintext;
         } catch (error) {
           showError(error);
         } finally {

@@ -12,7 +12,6 @@ body {
   background-color: #fdfdfd;
 }
 
-/* Header & Menu */
 header {
   margin-bottom: 20px;
 }
@@ -81,7 +80,6 @@ h2 {
   color: #fff;
 }
 
-/* Sections & Cards */
 section, .card {
   margin: 16px 0;
   padding: 16px;
@@ -97,7 +95,6 @@ section, .card {
   margin-top: 12px;
 }
 
-/* Forms & Inputs */
 label {
   display: block;
   margin-top: 12px;
@@ -132,14 +129,6 @@ textarea {
   font-family: monospace;
 }
 
-p[role="status"] {
-  min-height: 20px;
-  margin: 8px 0 0;
-  color: #0284c7;
-  font-weight: 500;
-}
-
-/* Buttons & Màu cơ bản */
 button, .btn {
   display: inline-block;
   width: 100%;
@@ -155,7 +144,6 @@ button, .btn {
   transition: background-color 0.15s;
 }
 
-/* Màu xanh dương (Mặc định / Primary) */
 button, .btn, .btn-primary {
   background-color: #2563eb;
   color: #fff;
@@ -165,7 +153,6 @@ button:hover, .btn:hover, .btn-primary:hover {
   background-color: #1d4ed8;
 }
 
-/* Màu xám (Secondary) */
 .btn-secondary {
   background-color: #64748b;
   color: #fff;
@@ -175,7 +162,6 @@ button:hover, .btn:hover, .btn-primary:hover {
   background-color: #475569;
 }
 
-/* Màu xanh lá (Success) */
 .btn-success {
   background-color: #16a34a;
   color: #fff;
@@ -185,7 +171,6 @@ button:hover, .btn:hover, .btn-primary:hover {
   background-color: #15803d;
 }
 
-/* Màu đỏ (Danger) */
 .btn-danger {
   background-color: #dc2626;
   color: #fff;

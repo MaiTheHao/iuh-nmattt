@@ -44,7 +44,6 @@
 
         <label>Kết quả</label>
         <div id="aes-result" class="output"></div>
-        <p id="aes-status" role="status"></p>
       </section>
     </main>
 
@@ -60,7 +59,6 @@
       const inputEl = $('aes-input');
       const runBtn = $('aes-run');
       const resultEl = $('aes-result');
-      const statusEl = $('aes-status');
 
       async function callCryptoApi(action, payload) {
         const response = await fetch(API_URL, {
@@ -77,10 +75,6 @@
         return result;
       }
 
-      function setStatus(message) {
-        statusEl.textContent = message;
-      }
-
       function showError(error) {
         alert(error?.message || 'Đã xảy ra lỗi.');
       }
@@ -94,7 +88,7 @@
 
         inputLabelEl.textContent = isEncrypt ? 'PLAINTEXT' : 'CIPHERTEXT';
         runBtn.textContent = isEncrypt ? 'Mã hóa AES-CBC' : 'Giải mã AES-CBC';
-        inputEl.placeholder = isEncrypt ? 'Hello AES-CBC' : 'IV:ciphertext';
+        inputEl.placeholder = isEncrypt ? 'Hello AES-CBC' : 'IV:nmattt_iuh:ciphertext';
 
         if (resultEl.textContent) {
           inputEl.value = resultEl.textContent;
@@ -113,7 +107,6 @@
         }
 
         runBtn.disabled = true;
-        setStatus(isEncrypt ? 'Đang mã hóa…' : 'Đang giải mã…');
 
         try {
           const payload = isEncrypt
@@ -121,8 +114,7 @@
             : { secretKey: key, ciphertext: inputEl.value };
           const result = await callCryptoApi(isEncrypt ? 'aes-encrypt' : 'aes-decrypt', payload);
 
-          resultEl.textContent = isEncrypt ? result.ciphertext : result.plaintext;
-          setStatus(isEncrypt ? 'Đã mã hóa AES-CBC.' : 'Đã giải mã AES-CBC.');
+          resultEl.textContent = isEncrypt ? result : result.plaintext;
         } catch (error) {
           showError(error);
         } finally {
